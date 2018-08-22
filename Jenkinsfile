@@ -16,7 +16,11 @@ pipeline {
                 }
             }
             steps {
-                sh "jupyter-nbconvert --to python --stdout 'Long-term international migration 4.01A Passenger survey.ipynb' | ipython"
+                script {
+                    for (def nb : findFiles(glob: '*.ipynb')) {
+                        sh "jupyter-nbconvert --to python --stdout '${nb}' | ipython"
+                    }
+                }
             }
         }
         stage('RDF Data Cube') {
@@ -27,7 +31,7 @@ pipeline {
                 }
             }
             steps {
-                sh "table2qb exec cube-pipeline --input-csv out/tidydata4.01A.csv --output-file out/observations.ttl --column-config metadata/columns.csv --dataset-name 'ONS LTIM Passenger Survey' --base-uri http://gss-data.org.uk/ --dataset-slug ons-ltim-passenger-survey"
+                error 'need to declare columns.csv'
             }
         }
         stage('Upload draftset') {
@@ -37,7 +41,7 @@ pipeline {
                     for (def file : findFiles(glob: 'out/*.ttl')) {
                         obslist.add("out/${file.name}")
                     }
-                    uploadCube('ONS LTIM Passenger Survey', obslist)
+                    uploadCube('ONS LTIM Passenger Survey 4.01', obslist)
                 }
             }
         }
@@ -52,6 +56,9 @@ pipeline {
     post {
         always {
             archiveArtifacts 'out/*'
+        }
+        success {
+            build job: '../GDP-tests', wait: false
         }
     }
 }

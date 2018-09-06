@@ -16,11 +16,7 @@ pipeline {
                 }
             }
             steps {
-                script {
-                    for (def nb : findFiles(glob: '*.ipynb')) {
-                        sh "jupyter-nbconvert --to python --stdout '${nb}' | ipython"
-                    }
-                }
+                sh "jupyter-nbconvert --to python --stdout '4.01_Migration_data.ipynb' | ipython"
             }
         }
         stage('Upload draftset') {

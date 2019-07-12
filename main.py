@@ -57,10 +57,9 @@ for tab in tabs:
     ])
     #savepreviewhtml(cs_est)
     tidy_sheet = cs_est.topandas()
-    tidy_sheet = tidy_sheet[pd.isna(tidy_sheet['DATAMARKER'])].copy() # Todo: data markers
-    tidy_sheet.drop(columns=['DATAMARKER'], inplace=True)
-    tidy_sheet.rename(columns={'OBS': 'Value'}, inplace=True)
+    tidy_sheet.rename(columns={'OBS': 'Value', 'DATAMARKER': 'IPS Marker'}, inplace=True)
     tidied_sheets.append(tidy_sheet)
+    break
 tidy = pd.concat(tidied_sheets)
 tidy
 
@@ -82,7 +81,7 @@ tidy['Sex'] = codes_table[2]
 tidy['Age'] = codes_table[3]
 tidy = tidy[['Year','Country of Residence','Migration Flow',
              'IPS Citizenship','Sex','Age',
-             'Measure Type','Value','CI','Unit']]
+             'Measure Type','Value','IPS Marker','CI','Unit']]
 tidy
 # -
 
@@ -104,6 +103,10 @@ tidy['Sex'] = tidy['Sex'].cat.rename_categories({
     'Persons': 'T'})
 tidy['Age'].cat.categories = tidy['Age'].cat.categories.map(
     lambda s: 'all' if s == 'Age All' else pathify(s[:3]) + '/' + pathify(s[4:]))
+tidy['IPS Marker'].cat.rename_categories({
+    'z': 'not-applicable',
+    '.': 'no-contact',
+    '0~': 'rounds-to-zero'})
 tidy
 
 out = Path('out')
@@ -118,5 +121,16 @@ scraper.dataset.theme = THEME['population']
 with open(out / 'dataset.trig', 'wb') as metadata:
     metadata.write(scraper.generate_trig())
 # -
+csvw = CSVWMetadata('https://ons-opendata.github.io/ref_migration/')
+csvw.create(out / 'observations.csv', out / 'observations.csv-schema.json')
+
+
+# Alternate output using CSVW directly
+
+tidy['Measure Type'].cat.categories = tidy['Measure Type'].cat.categories.map(pathify)
+tidy.to_csv(out / 'observations-alt.csv', index = False)
+csvw.create(out / 'observations-alt.csv', out / 'observations-alt.csv-metadata.json', with_transform=True,
+            base_url='http://gss-data.org.uk/data/', base_path='gss_data/migration/ons-ltim-passenger-survey-4-01',
+            dataset_metadata=scraper.dataset.as_quads())
 
 

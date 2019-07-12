@@ -103,7 +103,7 @@ tidy['Sex'] = tidy['Sex'].cat.rename_categories({
     'Persons': 'T'})
 tidy['Age'].cat.categories = tidy['Age'].cat.categories.map(
     lambda s: 'all' if s == 'Age All' else pathify(s[:3]) + '/' + pathify(s[4:]))
-tidy['IPS Marker'].cat.rename_categories({
+tidy['IPS Marker'] = tidy['IPS Marker'].cat.rename_categories({
     'z': 'not-applicable',
     '.': 'no-contact',
     '0~': 'rounds-to-zero'})

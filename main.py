@@ -24,7 +24,7 @@ scraper = Scraper('https://www.ons.gov.uk/peoplepopulationandcommunity/populatio
 scraper
 # -
 
-tabs = scraper.distribution().as_databaker()
+tabs = scraper.distributions[0].as_databaker()
 
 # Each tab is of the same form, with "software readable codes":
 #
@@ -55,13 +55,16 @@ for tab in tabs:
         HDimConst('Measure Type', 'Count'),
         HDimConst('Unit', 'people-thousands')
     ])
-    #savepreviewhtml(cs_est)
+    savepreviewhtml(cs_est)
     tidy_sheet = cs_est.topandas()
     tidy_sheet.rename(columns={'OBS': 'Value', 'DATAMARKER': 'IPS Marker'}, inplace=True)
     tidied_sheets.append(tidy_sheet)
-    break
+#     break
 tidy = pd.concat(tidied_sheets)
 tidy
+# -
+
+tidy['Country of Residence'].unique()
 
 
 # +
@@ -121,7 +124,7 @@ scraper.dataset.theme = THEME['population']
 with open(out / 'dataset.trig', 'wb') as metadata:
     metadata.write(scraper.generate_trig())
 # -
-csvw = CSVWMetadata('https://ons-opendata.github.io/ref_migration/')
+csvw = CSVWMetadata('https://gss-cogs.github.io/ref_migration/')
 csvw.create(out / 'observations.csv', out / 'observations.csv-schema.json')
 
 
@@ -132,5 +135,3 @@ tidy.to_csv(out / 'observations-alt.csv', index = False)
 csvw.create(out / 'observations-alt.csv', out / 'observations-alt.csv-metadata.json', with_transform=True,
             base_url='http://gss-data.org.uk/data/', base_path='gss_data/migration/ons-ltim-passenger-survey-4-01',
             dataset_metadata=scraper.dataset.as_quads())
-
-
